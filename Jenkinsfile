@@ -50,10 +50,10 @@ pipeline {
     
     post {
         success {
-            echo 'Pipeline completado exitosamente'
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline fallo'
+            echo 'Pipeline failed!'
         }
     }
 }
