@@ -1,49 +1,38 @@
 pipeline {
     agent any
     
-    environment {
-        DOCKER_IMAGE = "users-api"
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
-    }
-    
     stages {
         stage('Clone Repository') {
             steps {
-                echo 'Cloning repository...'
-                checkout scm
+                echo 'Repository already cloned by Jenkins'
             }
         }
         
-        stage('Build Docker Image') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Building Docker image...'
-                script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                }
+                sh 'npm install'
             }
         }
         
         stage('Run Tests') {
             steps {
-                echo 'Running tests in container...'
-                script {
-                    docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").inside {
-                        sh 'npm test'
-                    }
-                }
+                sh 'npm test'
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t users-api:${BUILD_NUMBER} .'
             }
         }
         
         stage('Deploy Local') {
             steps {
-                echo 'Deploying to local Docker...'
-                script {
-                    sh """
-                        docker stop users-api || true
-                        docker rm users-api || true
-                        docker run -d --name users-api -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    """
-                }
+                sh '''
+                    docker stop users-api || true
+                    docker rm users-api || true
+                    docker run -d --name users-api -p 3000:3000 users-api:${BUILD_NUMBER}
+                '''
             }
         }
     }
